@@ -51,6 +51,8 @@
   nav.top { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
   .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex: none; }
+  .nav-links { display: flex; align-items: center; gap: 20px; }
+  .nav-link { text-decoration: none; color: var(--text-secondary); font-weight: 600; font-size: 14px; }
   nav.top a.cta {
     background: var(--accent); color: var(--accent-ink); text-decoration: none;
     padding: 9px 16px; border-radius: 100px; font-weight: 600; font-size: 14px;
@@ -67,6 +69,18 @@
     font-size: clamp(17px, 2.4vw, 20px); color: var(--text-secondary); max-width: 620px; margin: 0 0 32px;
   }
   .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-teaser {
+    margin-top: 22px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+    color: var(--text-secondary); font-size: 14px; font-weight: 600;
+  }
+  .hero-teaser-avatars { display: flex; }
+  .hero-teaser-avatars .mini-avatar {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--page);
+    margin-left: -8px; display: flex; align-items: center; justify-content: center;
+    color: #ffffff; font-size: 10px; font-weight: 700;
+  }
+  .hero-teaser-avatars .mini-avatar:first-child { margin-left: 0; }
+  .hero-teaser:hover { color: var(--text-primary); }
   .btn-primary {
     background: var(--accent); color: var(--accent-ink); text-decoration: none; font-weight: 700;
     padding: 14px 26px; border-radius: 100px; font-size: 16px; border: none; cursor: pointer;
@@ -135,6 +149,16 @@
   .pledge-success p { color: var(--text-secondary); font-size: 15px; max-width: none; }
 
   /* Wall of pledges — feed style */
+  .wall-section {
+    background: color-mix(in srgb, var(--accent) 6%, var(--page));
+    border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+  }
+  .wall-heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 0; }
+  .wall-heading h2 { margin: 0; }
+  .wall-pill {
+    background: var(--accent); color: var(--accent-ink); font-size: 12.5px; font-weight: 700;
+    padding: 5px 12px; border-radius: 100px; white-space: nowrap;
+  }
   .wall { display: grid; gap: 12px; margin-top: 24px; max-width: 640px; }
   .wall-item {
     background: var(--card); border: 1px solid var(--border); border-radius: 14px;
@@ -167,7 +191,10 @@
 <div class="wrap">
   <nav class="top">
     <div class="brand"><span class="dot"></span> nonomo</div>
-    <a class="cta" href="#pledge">Join the pledge</a>
+    <div class="nav-links">
+      <a class="nav-link" href="#wall">Voices</a>
+      <a class="cta" href="#pledge">Join the pledge</a>
+    </div>
   </nav>
 </div>
 
@@ -179,6 +206,10 @@
       <a class="btn-primary" href="#pledge">Sign the pledge</a>
       <a class="btn-secondary" href="#manifesto">Read the manifesto</a>
     </div>
+    <a class="hero-teaser" href="#wall" id="heroTeaser" style="display:none;">
+      <span class="hero-teaser-avatars" id="heroTeaserAvatars"></span>
+      <span id="heroTeaserText"></span>
+    </a>
   </div>
 </header>
 
@@ -238,6 +269,20 @@
   </div>
 </section>
 
+<section id="wall" class="wall-section">
+  <div class="wrap">
+    <div class="wall-heading">
+      <h2>Voices so far</h2>
+      <span class="wall-pill" id="wallPill" style="display:none;"></span>
+    </div>
+    <p>Real people, signing up below with their name and where the noise is worst. Names are shown as first name + last initial; emails are partially masked.</p>
+    <div class="wall" id="wallList">
+      <p class="wall-loading">Loading…</p>
+    </div>
+    <p class="wall-count" id="wallCount"></p>
+  </div>
+</section>
+
 <section id="pledge">
   <div class="wrap">
     <h2>Join nonomo</h2>
@@ -270,21 +315,10 @@
       <div class="pledge-success" id="pledgeSuccess">
         <div class="check">✓</div>
         <h3>You're in.</h3>
-        <p>Thanks for signing — your voice now shows up in the wall below (with your details kept private).</p>
+        <p>Thanks for signing — your voice now shows up in the wall above (with your details kept private).</p>
       </div>
-      <p class="pledge-note" id="pledgeNote">Your name and location may appear publicly below (name shown as first name + last initial, email partially masked). We never publish your full email or contact details.</p>
+      <p class="pledge-note" id="pledgeNote">Your name and location may appear publicly above (name shown as first name + last initial, email partially masked). We never publish your full email or contact details.</p>
     </div>
-  </div>
-</section>
-
-<section id="wall">
-  <div class="wrap">
-    <h2>Voices so far</h2>
-    <p>Every pledge below was submitted through the form above. Names are shown as first name + last initial; emails are partially masked.</p>
-    <div class="wall" id="wallList">
-      <p class="wall-loading">Loading…</p>
-    </div>
-    <p class="wall-count" id="wallCount"></p>
   </div>
 </section>
 
@@ -331,6 +365,29 @@
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  function updateTeasers(pledges) {
+    var pill = document.getElementById('wallPill');
+    var teaser = document.getElementById('heroTeaser');
+    var teaserAvatars = document.getElementById('heroTeaserAvatars');
+    var teaserText = document.getElementById('heroTeaserText');
+
+    if (pledges.length === 0) {
+      pill.style.display = 'none';
+      teaser.style.display = 'none';
+      return;
+    }
+
+    pill.textContent = pledges.length + (pledges.length === 1 ? ' voice' : ' voices');
+    pill.style.display = 'inline-block';
+
+    var preview = pledges.slice(0, 4);
+    teaserAvatars.innerHTML = preview.map(function (p) {
+      return '<span class="mini-avatar" style="background:' + avatarColor(p.name) + '">' + escapeHtml(initials(p.name)) + '</span>';
+    }).join('');
+    teaserText.textContent = pledges.length + (pledges.length === 1 ? ' person has' : ' people have') + ' already signed — see who';
+    teaser.style.display = 'inline-flex';
+  }
+
   function loadWall() {
     var listEl = document.getElementById('wallList');
     var countEl = document.getElementById('wallCount');
@@ -338,8 +395,9 @@
       .then(function (res) { return res.json(); })
       .then(function (data) {
         var pledges = data.pledges || [];
+        updateTeasers(pledges);
         if (pledges.length === 0) {
-          listEl.innerHTML = '<p class="wall-empty">No pledges yet — be the first to sign above.</p>';
+          listEl.innerHTML = '<p class="wall-empty">No pledges yet — be the first to sign below.</p>';
           countEl.textContent = '';
           return;
         }
